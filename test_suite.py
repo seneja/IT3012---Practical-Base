@@ -1,5 +1,6 @@
 import unittest
 from agent import SimpleReflexAgent, ModelBasedAgent, SearchAgent
+from visual_grid_game import VisualGridHuntGame
 
 
 class TestPractical1And2_ReflexAgents(unittest.TestCase):
@@ -44,6 +45,21 @@ class TestPractical1And2_ReflexAgents(unittest.TestCase):
             action_2,
             "ModelBasedAgent returned the exact same action twice in a row for the same percept. Internal state/memory is not working correctly."
         )
+
+
+class TestEnvironmentInitialization(unittest.TestCase):
+    def test_toxic_traps_are_generated_safely(self):
+        env = VisualGridHuntGame(width=8, height=8, num_food=4, num_opponents=1, custom_walls={(2, 2), (3, 3)})
+
+        self.assertTrue(hasattr(env, 'toxic_traps'))
+        self.assertEqual(len(env.toxic_traps), 3)
+
+        for trap in env.toxic_traps:
+            self.assertNotEqual(trap, (0, 0))
+            self.assertNotIn(trap, env.walls)
+            self.assertNotIn(trap, env.food_positions)
+            self.assertTrue(0 <= trap[0] < env.width)
+            self.assertTrue(0 <= trap[1] < env.height)
 
 
 class TestPractical3_SearchAgent(unittest.TestCase):
