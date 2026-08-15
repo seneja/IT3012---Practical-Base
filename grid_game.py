@@ -10,7 +10,7 @@ class GridHuntGame:
         self.height = height
         self.agent_pos = [0, 0]  # Starting position (x, y)
 
-
+        # Place a few random food pellets and obstacles (walls)
         self.food_positions = {(1, 2), (2, 3), (3, 0), (2, 1)}
         self.walls = {(1, 1), (2, 2)}
         self.toxic_traps = {(3, 2), (1, 3)}
@@ -43,7 +43,10 @@ class GridHuntGame:
             'wall_ahead': wall_ahead,
             'food_here': tuple(self.agent_pos) in self.food_positions,
             'score': self.score,
-            'remaining_food': len(self.food_positions)
+            'remaining_food': len(self.food_positions),
+            'grid_size': (self.width, self.height),
+            'walls': list(self.walls),
+            'all_food': list(self.food_positions)
         }
 
     def execute_action(self, action: str, agent=None):
