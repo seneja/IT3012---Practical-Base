@@ -174,6 +174,54 @@ class TestPractical3_SearchAgent(unittest.TestCase):
         is_empty_or_none = (path is None) or (len(path) == 0)
         self.assertTrue(is_empty_or_none, "UCS should return None or [] when the goal is unreachable.")
 
+    def test_astar_heuristics(self):
+        """Test 9: Verify Manhattan and Euclidean distance heuristics."""
+        self.assertEqual(self.search_agent.manhattan_distance((0, 0), (3, 4)), 7)
+        self.assertEqual(self.search_agent.euclidean_distance((0, 0), (3, 4)), 5.0)
+
+    def test_astar_shortest_path_manhattan(self):
+        """Test 10: A* Search with Manhattan distance must find the optimal path in a static maze."""
+        grid_size = (4, 4)
+        start_pos = (0, 0)
+        goal_pos = (3, 3)
+        walls = [(1, 0), (2, 0), (0, 2), (1, 2), (2, 2)]
+
+        try:
+            path = self.search_agent.astar_search(start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan')
+        except AttributeError:
+            self.fail("astar_search method not implemented in SearchAgent.")
+
+        self.assertIsNotNone(path, "A* returned None. No path found.")
+        self.assertIsInstance(path, list, "A* should return a list of actions (strings).")
+        self.assertEqual(len(path), 6, f"A* did not find the optimal path. Expected 6 steps, got {len(path)}.")
+
+    def test_astar_shortest_path_euclidean(self):
+        """Test 11: A* Search with Euclidean distance must find the optimal path in a static maze."""
+        grid_size = (4, 4)
+        start_pos = (0, 0)
+        goal_pos = (3, 3)
+        walls = [(1, 0), (2, 0), (0, 2), (1, 2), (2, 2)]
+
+        try:
+            path = self.search_agent.astar_search(start_pos, goal_pos, walls, grid_size, heuristic_type='euclidean')
+        except AttributeError:
+            self.fail("astar_search method not implemented in SearchAgent.")
+
+        self.assertIsNotNone(path, "A* returned None. No path found.")
+        self.assertIsInstance(path, list, "A* should return a list of actions (strings).")
+        self.assertEqual(len(path), 6, f"A* did not find the optimal path. Expected 6 steps, got {len(path)}.")
+
+    def test_astar_unreachable_goal(self):
+        """Test 12: A* must correctly return failure (None/Empty) if goal is blocked."""
+        grid_size = (3, 3)
+        start_pos = (0, 0)
+        goal_pos = (2, 2)
+        walls = [(1, 2), (2, 1), (1, 1)]
+
+        path = self.search_agent.astar_search(start_pos, goal_pos, walls, grid_size)
+        is_empty_or_none = (path is None) or (len(path) == 0)
+        self.assertTrue(is_empty_or_none, "A* should return None or [] when the goal is unreachable.")
+
 
 if __name__ == '__main__':
     # Run the test suite

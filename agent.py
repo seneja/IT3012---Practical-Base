@@ -3,6 +3,7 @@ from collections import deque
 import heapq
 import math
 from tracemalloc import start
+from logic_engine import KnowledgeBase
 
 def bfs_search(graph, start):
     visited = {start}
@@ -158,6 +159,9 @@ class SearchAgent:
         self.plan = []
         self.active_algo = 'AStar'
         self.current_pos = (0, 0)
+        self.kb = KnowledgeBase()
+        self.kb.tell_rule(['TargetVisible', 'HasDust'], 'SafeToEngage')
+        self.kb.tell_rule(['SafeToEngage', 'BloodseekerMissing'], 'Retreat')
 
     def manhattan_distance(self, pos, goal):
         return int(abs(pos[0] - goal[0]) + abs(pos[1] - goal[1]))
@@ -190,7 +194,7 @@ class SearchAgent:
                     path = self.ucs_search(self.current_pos, food, walls, grid_size)
                 elif self.active_algo == 'AStar':
                     remaining_food = percept.get('remaining_food', len(all_food))
-                    path = self.astar_search(self.current_pos, food, walls, grid_size, heuristic_type='manhattan')
+                    path = self.astar_search(self.current_pos, food, walls, grid_size, heuristic_type='manhattan', percept=percept)
                 
                 if path is not None and len(path) > 0:
                     self.plan = list(path)
@@ -334,7 +338,7 @@ class SearchAgent:
                             
         return None
 
-    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan', percept=None):
         """
         A* Search evaluates nodes by combining the path cost g(n) and the estimated cost to the goal h(n).
         Evaluation function: f(n) = g(n) + h(n).
@@ -375,6 +379,29 @@ class SearchAgent:
                 next_pos = (curr[0] + dx, curr[1] + dy)
                 if 0 <= next_pos[0] < width and 0 <= next_pos[1] < height:
                     if next_pos not in walls_set and next_pos not in reached_states:
+                        self.kb.clear_facts()
+                        
+                        if percept is not None and 'all_food' in percept:
+                            if next_pos in percept['all_food']:
+                                self.kb.tell_fact('TargetVisible')
+                        elif next_pos == goal_pos:
+                            self.kb.tell_fact('TargetVisible')
+                            
+                        if percept is not None and 'toxic_traps' in percept:
+                            if next_pos in percept['toxic_traps']:
+                                self.kb.tell_fact('HasDust')
+                                
+                        if percept is not None and 'opponents' in percept:
+                            if len(percept['opponents']) == 0:
+                                self.kb.tell_fact('BloodseekerMissing')
+                        else:
+                            self.kb.tell_fact('BloodseekerMissing')
+                            
+                        self.kb.forward_chain()
+                        
+                        if 'Retreat' in self.kb.facts:
+                            continue
+                            
                         g_new = g_cost + 1
                         if heuristic_type == 'manhattan':
                             h_new = self.manhattan_distance(next_pos, goal_pos)
